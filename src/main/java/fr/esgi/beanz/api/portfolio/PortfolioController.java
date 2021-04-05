@@ -35,7 +35,7 @@ public class PortfolioController {
   }
 
   @RequestMapping(method = RequestMethod.POST)
-  public String postPortfolio(@Valid @RequestBody Portfolio portfolio) {
+  public String postPortfolio(@Valid() @RequestBody() Portfolio portfolio) {
 
     final var res = portfolioService.createPortfolio(portfolio);
     return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + '/' + res.getId();
