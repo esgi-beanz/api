@@ -1,0 +1,12 @@
+server:
+  port: 3000
+
+spring:
+  h2:
+    console:
+      enabled: true
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create
