@@ -17,9 +17,7 @@ public class UserTests {
 
     @Test
     void fetchingAUserThatDoesntExistsShouldThrowA404Error() throws Exception {
-        this.mockMvc
-                .perform(MockMvcRequestBuilders.get("/users/0"))
-                .andDo(MockMvcResultHandlers.print())
+        this.mockMvc.perform(MockMvcRequestBuilders.get("/users/0")).andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 }
