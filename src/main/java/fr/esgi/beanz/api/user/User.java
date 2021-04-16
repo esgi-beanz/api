@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -17,6 +18,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import lombok.Data;
 
 @Entity
+@Table(name = "\"User\"")
 @Data
 public class User implements Serializable {
     @Id
