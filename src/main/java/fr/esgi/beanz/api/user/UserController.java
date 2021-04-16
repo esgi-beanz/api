@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
+import fr.esgi.beanz.api.exceptions.HttpErrorException;
 import fr.esgi.beanz.api.user.dto.CreateUserDTO;
 
 import java.util.List;
@@ -30,11 +30,11 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getUser(@PathVariable("id") long id) {
+    public User getUser(@PathVariable("id") long id) throws HttpErrorException {
         final var user = userService.getUser(id);
 
         if (user.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This user doesn't exist");
+            throw new HttpErrorException(HttpStatus.NOT_FOUND, "This user doesn't exist");
         }
 
         return user.get();
