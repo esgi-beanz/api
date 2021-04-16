@@ -3,6 +3,7 @@ package fr.esgi.beanz.api.user;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,15 +32,17 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<User> getUserByUsername(String username) {
+        final var user = new User().setUsername(username);
+        return userRepository.findOne(Example.of(user));
+    }
+
     @Transactional()
     public User createUser(CreateUserDTO data) {
-        final var user = new User();
-
-        user.setEmail(data.getEmail());
-        user.setUsername(data.getUsername());
-
         final var encodedPassword = passwordEncoder.encode(data.getPassword());
-        user.setPassword(encodedPassword);
+        final var user = new User().setEmail(data.getEmail()).setUsername(data.getUsername())
+                .setPassword(encodedPassword);
 
         return userRepository.save(user);
     }

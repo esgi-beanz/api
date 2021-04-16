@@ -10,3 +10,7 @@ spring:
     generate-ddl: true
     hibernate:
       ddl-auto: create
+
+security:
+  token:
+    secret: ${JWT_TOKEN_SECRET}
