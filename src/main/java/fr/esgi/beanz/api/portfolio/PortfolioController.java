@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import fr.esgi.beanz.api.error.ErrorResponse;
+import fr.esgi.beanz.api.exceptions.HttpErrorException;
 import fr.esgi.beanz.api.portfolio.dto.UpdatePortfolioDTO;
 
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -100,7 +98,7 @@ public class PortfolioController {
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ErrorResponse handleValidationExceptions(MethodArgumentNotValidException ex) {
+  public HttpErrorException handleValidationExceptions(MethodArgumentNotValidException ex) {
     return fr.esgi.beanz.api.error.ExceptionHandler.handleValidationExceptions(ex);
   }
 
