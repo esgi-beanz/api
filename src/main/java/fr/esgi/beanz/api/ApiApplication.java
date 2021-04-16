@@ -25,6 +25,7 @@ public class ApiApplication {
         return new MethodValidationPostProcessor();
     }
     
+    @Bean
     public BCryptPasswordEncoder encoder() {
         return new BCryptPasswordEncoder();
     }

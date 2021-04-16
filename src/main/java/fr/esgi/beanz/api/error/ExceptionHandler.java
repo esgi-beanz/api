@@ -14,12 +14,12 @@ import fr.esgi.beanz.api.exceptions.HttpErrorException;
 
 public class ExceptionHandler {
   public static HttpErrorException handleValidationExceptions(MethodArgumentNotValidException ex) {
-    List<String> errors = new ArrayList<>();
+    List<String> errors = new ArrayList<String>();
     ex.getBindingResult().getAllErrors().forEach((error) -> {
       String fieldName = ((FieldError) error).getField();
       String errorMessage = error.getDefaultMessage();
       errors.add(String.format("%s : %s", fieldName, errorMessage));
     });
-    return new HttpErrorException(HttpStatus.BAD_REQUEST, "Bad request.", errors.toArray());
+    return new HttpErrorException(HttpStatus.BAD_REQUEST,(String[]) errors.toArray());
   } 
 }
