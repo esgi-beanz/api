@@ -29,4 +29,14 @@ public class PortfolioService {
   public Portfolio createPortfolio(Portfolio portfolio) {
     return portfolioRepository.save(portfolio);
   }
+
+  @Transactional()
+  public Portfolio updatePortfolio(Portfolio portfolio) {
+    return portfolioRepository.save(portfolio);
+  }
+
+  @Transactional()
+  public void deletePortfolio(Portfolio portfolio) {
+    portfolioRepository.delete(portfolio);
+  }
 }
