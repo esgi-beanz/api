@@ -13,4 +13,4 @@ spring:
 
 security:
   token:
-    secret: ${JWT_TOKEN_SECRET}
+    secret: fDH9aC9Lq5MSzn77vLtfXQcz923BwF89
