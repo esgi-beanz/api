@@ -3,6 +3,8 @@ package fr.esgi.beanz.api.auth;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +32,7 @@ public class AuthenticationController {
     private final AuthenticationManagerBuilder authenticationManager;
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDTO data) throws HttpErrorException {
+    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginDTO data) throws HttpErrorException {
         try {
             final var authenticationToken = new UsernamePasswordAuthenticationToken(data.getUsername(),
                     data.getPassword());
