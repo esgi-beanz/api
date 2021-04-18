@@ -16,8 +16,8 @@ public class UserTests {
     private MockMvc mockMvc;
 
     @Test
-    void fetchingAUserThatDoesntExistsShouldThrowA404Error() throws Exception {
+    void fetchingUserWithoutAuthShouldThrowA403Error() throws Exception {
         this.mockMvc.perform(MockMvcRequestBuilders.get("/users/0")).andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 }
