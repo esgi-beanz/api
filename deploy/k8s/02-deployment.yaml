@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apibeanz-deploy
+  namespace: apibeanz
+  labels:
+    app: apibeanz
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: apibeanz
+  template:
+    metadata:
+      labels:
+        app: apibeanz
+    spec:
+      containers:
+        - name: apibeanz-api
+          image: rg.fr-par.scw.cloud/beanz/api:latest
+          envFrom:
+            - secretRef:
+                name: apibeanz-secrets
+          resources:
+            limits:
+              memory: 1024Mi
+              cpu: '2'
+            requests:
+              memory: 512Mi
+              cpu: '1'
+          env:
+            - name: PORT
+              value: '3000'
+            - name: POSTGRES_DB
+              value: 'api'
+            - name: POSTGRES_USER
+              value: 'api'
+            - name: JWT_TOKEN_SECRET
+              value: ufFvPUQeVXZ7HNWKFdp4g6KHuZgLUaRZ
