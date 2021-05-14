@@ -20,6 +20,9 @@ security:
   token:
     secret: ${JWT_TOKEN_SECRET}
 
+finnhub:
+  token: ${FINNHUB_API_TOKEN}
+
 logging:
   level:
     org:
