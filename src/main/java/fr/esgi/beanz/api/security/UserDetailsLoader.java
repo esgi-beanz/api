@@ -19,7 +19,7 @@ public class UserDetailsLoader implements UserDetailsService {
         final var appUser = userService.getUserByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User " + username + " not found"));
 
-        return User.builder().username(username).password(appUser.getPassword())
+        return User.builder().username(username).password("{bcrypt}" + appUser.getPassword())
                 .roles(appUser.getRoles().toArray(new String[0])).accountExpired(false).accountLocked(false)
                 .credentialsExpired(false).disabled(false).build();
     }

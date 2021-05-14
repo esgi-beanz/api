@@ -1,0 +1,150 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: Terraform deploy
+    runs-on: ubuntu-latest
+    outputs:
+      rdb_ip: ${{ steps.tf_output.outputs.rdb_ip }}
+      rdb_port: ${{ steps.tf_output.outputs.rdb_port }}
+      k8s_cluster_id: ${{ steps.tf_output.outputs.k8s_cluster_id }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_wrapper: false # <- to be able to get output
+
+      - name: terraform fmt -check
+        run: terraform fmt -check
+        working-directory: ./deploy/terraform
+
+      - name: terraform init
+        run: terraform init
+        working-directory: ./deploy/terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+
+      - name: terraform validate
+        run: terraform validate
+        working-directory: ./deploy/terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+
+      - name: terraform plan
+        run: terraform plan
+        working-directory: ./deploy/terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          TF_VAR_RDB_PASS: ${{ secrets.DB_PASS }}
+
+      - name: terraform apply
+        run: terraform apply -auto-approve -input=false
+        working-directory: ./deploy/terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          TF_VAR_RDB_PASS: ${{ secrets.DB_PASS }}
+
+      - name: Save terraform output
+        id: tf_output
+        run: |
+          echo "::set-output name=rdb_ip::$(terraform output rdb_ip)"
+          echo "::set-output name=rdb_port::$(terraform output rdb_port)"
+          echo "::set-output name=k8s_cluster_id::$(terraform output k8s_cluster_id)"
+        working-directory: ./deploy/terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+
+  docker:
+    name: Docker build/push
+    needs: [terraform]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to Scaleway Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: rg.fr-par.scw.cloud/beanz
+          username: nologin
+          password: ${{ secrets.SCW_SECRET_KEY }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: rg.fr-par.scw.cloud/beanz/api:latest
+
+  psql:
+    name: Database setup
+    needs: [terraform]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+      - name: Create database for API
+        run: psql -h ${{needs.terraform.outputs.rdb_ip}} --port ${{needs.terraform.outputs.rdb_port}} -d rdb -U api -tc "SELECT 1 FROM pg_database WHERE datname = 'api'" | grep -q 1 || psql -h ${{needs.terraform.outputs.rdb_ip}} --port ${{needs.terraform.outputs.rdb_port}} -d rdb -U api -c "CREATE DATABASE api"
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASS }}
+      - name: Grants privileges to API user
+        run: psql -h ${{needs.terraform.outputs.rdb_ip}} --port ${{needs.terraform.outputs.rdb_port}} -d rdb -U api  -c 'GRANT ALL PRIVILEGES ON DATABASE api TO api;'
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASS }}
+
+  k8s:
+    name: Deploy API to k8s
+    needs: [terraform, psql, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install scw-cli and kucectl
+        run: |
+          sudo curl -o /usr/local/bin/scw -L "https://github.com/scaleway/scaleway-cli/releases/download/v2.3.0/scw-2.3.0-linux-x86_64"
+          sudo chmod +x /usr/local/bin/scw
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client
+          scw version
+      - name: Init scw-cli
+        run: |
+          scw init secret-key=${{ secrets.SCW_SECRET_KEY }} send-telemetry=false install-autocomplete=false with-ssh-key=false region=fr-par zone=fr-par-1
+      - name: Install kubeconfig
+        run: |
+          scw k8s kubeconfig install $(echo ${{needs.terraform.outputs.k8s_cluster_id}} | cut -d '/' -f2)
+      - name: Deploy k8s things
+        working-directory: ./deploy/k8s
+        run: |
+          kubectl apply -f 01-ns.yaml
+          kubectl -n apibeanz delete secret apibeanz-secrets || true
+          kubectl -n apibeanz create secret generic apibeanz-secrets --from-literal=POSTGRES_URL="jdbc:postgresql://${{needs.terraform.outputs.rdb_ip}}:${{needs.terraform.outputs.rdb_port}}" --from-literal=POSTGRES_PASSWORD=${{ secrets.DB_PASS }}
+          kubectl apply -f 02-deployment.yaml
+          kubectl apply -f 03-service.yaml
+          kubectl apply -f 04-ingress.yaml
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.46.0/deploy/static/provider/scw/deploy.yaml
+          # kubectl -n apibeanz rollout restart deployment apibeanz-deploy
