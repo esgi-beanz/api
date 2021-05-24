@@ -11,6 +11,9 @@ spring:
     hibernate:
       ddl-auto: create
 
+finnhub:
+  token: ${FINNHUB_API_TOKEN}
+
 security:
   token:
     secret: fDH9aC9Lq5MSzn77vLtfXQcz923BwF89
