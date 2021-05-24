@@ -18,3 +18,5 @@ jobs:
         run: mvn -B clean package -DskipTests
       - name: Maven Verify Integration Tests
         run: mvn -B clean verify -Pintegration-test
+        env:
+          FINNHUB_API_TOKEN: ${{ secrets.FINNHUB_API_TOKEN }}
