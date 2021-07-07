@@ -1,5 +1,9 @@
 FROM maven:3-openjdk-11 as build
 
+ARG FINNHUB_API_TOKEN
+
+ENV FINNHUB_API_TOKEN $FINNHUB_API_TOKEN
+
 WORKDIR /usr/src/app
 
 COPY pom.xml .
