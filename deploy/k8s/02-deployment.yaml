@@ -37,3 +37,5 @@ spec:
               value: 'api'
             - name: JWT_TOKEN_SECRET
               value: ufFvPUQeVXZ7HNWKFdp4g6KHuZgLUaRZ
+            - name: FINNHUB_API_TOKEN
+              value: c2f7euaad3ien44400q0
