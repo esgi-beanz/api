@@ -4,14 +4,30 @@ on:
   workflow_dispatch:
 
 jobs:
+  # This is needed otherwise Terraform won't be able to delete the RDB instance
+  # cf https://github.com/scaleway/terraform-provider-scaleway/issues/801
+  psql:
+    name: Clean DBaaS instance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+      - name: Kill all connections
+        run: psql -h ${{secrets.DB_IP}} --port ${{secrets.DB_PORT}} -d rdb -U api -c "select pg_terminate_backend(pid) from pg_stat_activity where datname='api';"
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASS }}
+      - name: Drop DB
+        run: psql -h ${{secrets.DB_IP}} --port ${{secrets.DB_PORT}} -d rdb -U api -c "DROP DATABASE api"
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASS }}
+
   terraform:
     name: Terraform destroy
+    needs: [psql]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: hashicorp/setup-terraform@v1
-
-      # TODO: purge DB
 
       - name: terraform init
         run: terraform init
