@@ -1,8 +1,5 @@
 package fr.esgi.beanz.api;
 
-import fr.esgi.beanz.api.security.JwtTokenFilter;
-import fr.esgi.beanz.api.security.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +12,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import fr.esgi.beanz.api.security.JwtTokenFilter;
+import fr.esgi.beanz.api.security.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -34,6 +35,9 @@ class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()//
                 .antMatchers("/auth/login").permitAll()//
                 .antMatchers("/actuator/prometheus").permitAll()
+                .antMatchers("/v3/api-docs").permitAll()
+                .antMatchers("/v3/api-docs/*").permitAll()
+                .antMatchers("/swagger-ui/*").permitAll()
                 .antMatchers(HttpMethod.POST, "/users").permitAll()//
                 .antMatchers("/error").permitAll()//
                 .anyRequest()//
