@@ -106,6 +106,20 @@ jobs:
     needs: [terraform]
     runs-on: ubuntu-latest
     steps:
+      - name: Save DBaaS IP as secret
+        uses: hmanzur/actions-set-secret@v2.0.0
+        with:
+          name: 'DB_IP'
+          value: ${{needs.terraform.outputs.rdb_ip}}
+          repository: tradibeanz/api
+          token: ${{ secrets.GH_TOKEN }}
+      - name: Save DBaaS port as secret
+        uses: hmanzur/actions-set-secret@v2.0.0
+        with:
+          name: 'DB_PORT'
+          value: ${{needs.terraform.outputs.rdb_port}}
+          repository: tradibeanz/api
+          token: ${{ secrets.GH_TOKEN }}
       - name: Install PostgreSQL client
         run: sudo apt-get install -y postgresql-client
       - name: Create database for API
