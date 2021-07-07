@@ -4,11 +4,23 @@ Asset portfolio management API.
 
 ## Setup
 
-Use the Dockerfile 🙂
+Copy `.env.example` to `.env` and fill in the values.
+
+Build the Docker image:
+
+```sh
+docker-compose build --no-cache
+```
+
+Start the API and the database:
+
+```sh
+docker-compose up -d
+```
 
 ## Routes
 
-TODO, read the source code 🙂
+When running the API go to `/swagger-ui/index.html`.
 
 ## Deployment
 
