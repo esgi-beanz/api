@@ -148,7 +148,7 @@ jobs:
           kubectl apply -f app/03-service.yaml
           kubectl apply -f app/05-ingress.yaml
           kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.46.0/deploy/static/provider/scw/deploy.yaml
-          # kubectl -n apibeanz rollout restart deployment apibeanz-deploy
+          kubectl -n apibeanz rollout restart deployment apibeanz-deploy
           kubectl apply -f monitoring/01-ns-prom.yaml
           kubectl apply -f monitoring/02-prom-clusterole.yaml
           kubectl apply -f monitoring/03-prom-configmap.yaml
