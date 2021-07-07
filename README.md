@@ -22,9 +22,15 @@ docker-compose up -d
 
 When running the API go to `/swagger-ui/index.html`.
 
+## Infra
+
+![](./docs/assets/archi.svg)
+
 ## Deployment
 
 The API can be deployed on a HA infrastructure from scratch trough a manuel GitHub action workflow.
+
+![](docs/assets/deploy.svg)
 
 The workflow will do the following:
 
