@@ -141,11 +141,16 @@ jobs:
       - name: Deploy k8s things
         working-directory: ./deploy/k8s
         run: |
-          kubectl apply -f 01-ns.yaml
+          kubectl apply -f app/01-ns.yaml
           kubectl -n apibeanz delete secret apibeanz-secrets || true
           kubectl -n apibeanz create secret generic apibeanz-secrets --from-literal=POSTGRES_URL="jdbc:postgresql://${{needs.terraform.outputs.rdb_ip}}:${{needs.terraform.outputs.rdb_port}}" --from-literal=POSTGRES_PASSWORD=${{ secrets.DB_PASS }}
-          kubectl apply -f 02-deployment.yaml
-          kubectl apply -f 03-service.yaml
-          kubectl apply -f 04-ingress.yaml
+          kubectl apply -f app/02-deployment.yaml
+          kubectl apply -f app/03-service.yaml
+          kubectl apply -f app/05-ingress.yaml
           kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.46.0/deploy/static/provider/scw/deploy.yaml
           # kubectl -n apibeanz rollout restart deployment apibeanz-deploy
+          kubectl apply -f monitoring/01-ns-prom.yaml
+          kubectl apply -f monitoring/02-prom-clusterole.yaml
+          kubectl apply -f monitoring/03-prom-configmap.yaml
+          kubectl apply -f monitoring/04-prom-deployment.yaml
+          kubectl apply -f monitoring/05-prom-service.yaml
