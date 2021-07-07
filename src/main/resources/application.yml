@@ -2,6 +2,8 @@ server:
   port: ${PORT}
 
 spring:
+  application:
+    name: beanz
   h2:
     console:
       enabled: true
@@ -28,3 +30,12 @@ logging:
     org:
       springframework:
         security: error
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics, prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
