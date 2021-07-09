@@ -2,7 +2,6 @@ package fr.esgi.beanz.api.portfolio;
 
 import lombok.RequiredArgsConstructor;
 
-import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;

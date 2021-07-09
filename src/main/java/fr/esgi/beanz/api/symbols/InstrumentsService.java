@@ -1,8 +1,6 @@
 package fr.esgi.beanz.api.symbols;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
