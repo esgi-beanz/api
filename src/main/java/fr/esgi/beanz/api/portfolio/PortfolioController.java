@@ -44,7 +44,7 @@ public class PortfolioController {
 
 
     if (!portfolio.isPresent()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"This portfolio does not exist.");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND,"This portfolio does not exist.");
     }
 
     return portfolio.get();
