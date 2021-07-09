@@ -2,6 +2,7 @@ package fr.esgi.beanz.api.portfolio;
 
 import lombok.RequiredArgsConstructor;
 
+import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,9 +20,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import fr.esgi.beanz.api.exceptions.HttpErrorException;
 import fr.esgi.beanz.api.portfolio.dto.UpdatePortfolioDTO;
+import fr.esgi.beanz.api.symbols.InstrumentsService;
+import fr.esgi.beanz.api.symbols.interfaces.QuoteResponseDTO;
 
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -33,6 +37,9 @@ public class PortfolioController {
   @Autowired
   private final PortfolioService portfolioService;
 
+  @Autowired
+  private final InstrumentsService instrumentsService;
+
   @GetMapping
   public List<Portfolio> getRepository() {
     return portfolioService.getPortFolios();
@@ -42,9 +49,8 @@ public class PortfolioController {
   public Portfolio getPortfolio(@PathVariable("id") long id) {
     final var portfolio = portfolioService.getPortfolio(id);
 
-
     if (!portfolio.isPresent()) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND,"This portfolio does not exist.");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This portfolio does not exist.");
     }
 
     return portfolio.get();
@@ -53,35 +59,43 @@ public class PortfolioController {
   @PostMapping()
   @ResponseStatus(HttpStatus.CREATED)
   public String postPortfolio(@Valid @RequestBody Portfolio portfolio) {
+    QuoteResponseDTO instrument;
+    try {
+      instrument = this.instrumentsService.getSymbol(portfolio.getStock());
+    } catch (IOException e) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    if (instrument.getC().toString().equals("0") && instrument.getH().toString().equals("0")
+        && instrument.getL().toString().equals("0") && instrument.getO().toString().equals("0")
+        && instrument.getT().toString().equals("0")) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Specified symbol does not exist.");
+    }
 
     final var res = portfolioService.createPortfolio(portfolio);
     return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + '/' + res.getId();
   }
 
   @PutMapping(value = "/{id}")
-  public String updatePortfolio(@PathVariable("id") long id,  @Valid @RequestBody UpdatePortfolioDTO updatedParams) {
+  public String updatePortfolio(@PathVariable("id") long id, @Valid @RequestBody UpdatePortfolioDTO updatedParams) {
     final var existingPortfolio = portfolioService.getPortfolio(id);
 
     if (!existingPortfolio.isPresent()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"This portfolio does not exist.");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This portfolio does not exist.");
     }
 
     final var portfolio = existingPortfolio.get();
 
-    if (updatedParams.getAverage() != null) portfolio.setAverage(updatedParams.getAverage());
-    if (updatedParams.getShares() != null) portfolio.setShares(updatedParams.getShares());
-    if (updatedParams.getStock() != null) portfolio.setStock(updatedParams.getStock());
-    if (updatedParams.getCurrency() != null) portfolio.setCurrency(updatedParams.getCurrency());
+    if (updatedParams.getAverage() != null)
+      portfolio.setAverage(updatedParams.getAverage());
+    if (updatedParams.getShares() != null)
+      portfolio.setShares(updatedParams.getShares());
+    if (updatedParams.getStock() != null)
+      portfolio.setStock(updatedParams.getStock());
+    if (updatedParams.getCurrency() != null)
+      portfolio.setCurrency(updatedParams.getCurrency());
 
-
-
-    portfolioService.updatePortfolio(new Portfolio(
-      id,
-      portfolio.getStock(),
-      portfolio.getShares(),
-      portfolio.getAverage(),
-      portfolio.getCurrency()
-    ));
+    portfolioService.updatePortfolio(new Portfolio(id, portfolio.getStock(), portfolio.getShares(),
+        portfolio.getAverage(), portfolio.getCurrency()));
 
     return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + '/' + id;
   }
@@ -92,7 +106,7 @@ public class PortfolioController {
     final var portfolio = this.portfolioService.getPortfolio(id);
 
     if (!portfolio.isPresent()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"This portfolio does not exist.");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This portfolio does not exist.");
     }
 
     this.portfolioService.deletePortfolio(portfolio.get());
